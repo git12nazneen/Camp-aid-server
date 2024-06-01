@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const app = express()
+const jwt = require('jsonwebtoken');
 const port = process.env.PORT || 5000;
 
 app.use(
@@ -33,13 +34,93 @@ app.use(
   async function run() {
     try {
       // Connect the client to the server	(optional starting in v4.7)
-    //   await client.connect();
+      await client.connect();
       // Send a ping to confirm a successful connection
+        const addUserCollection = client.db('campAid').collection('users')
+
+
+
+    //jwt related api
+    app.post('/jwt', async(req, res)=>{
+        const user = req.body;
+        const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+          expiresIn:'1h'
+        });
+        res.send({token})
+      }) 
+  
+  
+      // middleweares
+      const verifyToken = (req, res, next) =>{
+        console.log('inside verifty token', req.headers.authorization);
+        if(!req.headers.authorization){
+          return res.status(401).send({message:'unauthorized access'})
+        }
+        const token = req.headers.authorization.split(' ')[1];
+       jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded)=>{
+        if(err){
+          console.log({err})
+          return res.status(401).send({message:'unauthorized access'})
+        }
+        req.decoded = decoded;
+        next()
+       })
+      }
+     
+  
+    // use verify admin after verify token
+    // const verifyAdmin = async(req, res, next)=>{
+    //   const email = req.decoded.email;
+    //   const query = {email: email};
+    //   const user = await addUserCollection.findOne(query)
+    //   const isAdmin = user?.role === 'admin';
+    //   if(!isAdmin){
+    //     return res.status(403).send({message: 'forbidden access'});
+    //   }
+    //   next()
+    // }
+  
+      
+        // auth related
+        // app.get('/users', async (req, res) => {
+        //     const query = addUserCollection.find()
+        //     const result = await query.toArray()
+        //     res.send(result);
+        //   })
+
+        app.post('/users', async(req, res)=>{
+            const user = req.body;
+            // insert email if user doesnt exists
+            // you can do this many ways (1. email unique 2. upsert 3.simple checking)
+            const query = {email: user.email}
+            const existingUser = await addUserCollection.findOne(query)
+            if(existingUser){
+              return res.send({message: 'user already exists', insertId: null})
+            }
+      
+      
+            const result = await addUserCollection.insertOne(user)
+            res.send(result);
+          })
+
+
+        app.get('/users', async (req, res) => {
+            try {
+                const query = addUserCollection.find()
+              const result = await query.toArray();
+              res.send(result);
+            } catch (error) {
+              console.error('Error fetching users:', error);
+              res.status(500).send('Error fetching users');
+            }
+          });
+
+
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
       // Ensures that the client will close when you finish/error
-      await client.close();
+    //   await client.close();
     }
   }
   run().catch(console.dir);

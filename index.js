@@ -19,7 +19,7 @@ app.use(
   // app.use(cors());
   app.use(express.json());
 
-  const { MongoClient, ServerApiVersion } = require('mongodb');
+  const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
   const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmgdsvn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
   
   // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -82,11 +82,6 @@ app.use(
   
       
         // auth related
-        // app.get('/users', async (req, res) => {
-        //     const query = addUserCollection.find()
-        //     const result = await query.toArray()
-        //     res.send(result);
-        //   })
 
         app.post('/users', async(req, res)=>{
             const user = req.body;
@@ -97,8 +92,6 @@ app.use(
             if(existingUser){
               return res.send({message: 'user already exists', insertId: null})
             }
-      
-      
             const result = await addUserCollection.insertOne(user)
             res.send(result);
           })
@@ -114,6 +107,28 @@ app.use(
               res.status(500).send('Error fetching users');
             }
           });
+
+
+          app.patch('/users/admin/:id', async(req, res)=>{
+            const id = req.params.id;
+            const filter = {_id: new ObjectId(id)};
+            const updatedDoc = {
+              $set:{
+                role:'admin'
+              }
+            }
+            const result = await addUserCollection.updateOne(filter, updatedDoc)
+            res.send(result);
+          })
+      
+
+
+          app.delete('/users/:id', async(req, res)=>{
+            const id = req.params.id;
+            const query = {_id : new ObjectId(id)}
+            const result = await addUserCollection.deleteOne(query);
+            res.send(result)
+          })
 
 
     //   await client.db("admin").command({ ping: 1 });

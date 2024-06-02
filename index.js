@@ -38,6 +38,7 @@ app.use(
       // Send a ping to confirm a successful connection
         const addUserCollection = client.db('campAid').collection('users')
         const addCampCollection = client.db('campAid').collection('camps')
+        const addParticipantCollection = client.db('campAid').collection('participant')
 
 
 
@@ -152,12 +153,26 @@ app.use(
             res.send(result);
         })
 
-      app.get('/camps/:id', async(req, res)=>{
-      const id = req.params.id;
-      const query= {_id : new ObjectId(id)}
-      const result = await addCampCollection.findOne(query)
-      res.send(result)
-    })
+          app.get('/camps/:id', async(req, res)=>{
+          const id = req.params.id;
+          const query= {_id : new ObjectId(id)}
+          const result = await addCampCollection.findOne(query)
+          res.send(result)
+        })
+
+        // particapant 
+
+        app.post('/participant', verifyToken, async (req, res)=>{
+          const item = req.body;
+          const result = await addParticipantCollection.insertOne(item);
+          res.send(result)
+        })
+
+        app.get('/participant', async(req, res)=>{
+          const result = await addParticipantCollection.find().toArray()
+          res.send(result);
+      })
+
 
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");

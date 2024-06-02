@@ -37,6 +37,7 @@ app.use(
       await client.connect();
       // Send a ping to confirm a successful connection
         const addUserCollection = client.db('campAid').collection('users')
+        const addCampCollection = client.db('campAid').collection('camps')
 
 
 
@@ -69,24 +70,22 @@ app.use(
      
   
     // use verify admin after verify token
-    // const verifyAdmin = async(req, res, next)=>{
-    //   const email = req.decoded.email;
-    //   const query = {email: email};
-    //   const user = await addUserCollection.findOne(query)
-    //   const isAdmin = user?.role === 'admin';
-    //   if(!isAdmin){
-    //     return res.status(403).send({message: 'forbidden access'});
-    //   }
-    //   next()
-    // }
+    const verifyAdmin = async(req, res, next)=>{
+      const email = req.decoded.email;
+      const query = {email: email};
+      const user = await addUserCollection.findOne(query)
+      const isAdmin = user?.role === 'admin';
+      if(!isAdmin){
+        return res.status(403).send({message: 'forbidden access'});
+      }
+      next()
+    }
   
       
         // auth related
 
         app.post('/users', async(req, res)=>{
             const user = req.body;
-            // insert email if user doesnt exists
-            // you can do this many ways (1. email unique 2. upsert 3.simple checking)
             const query = {email: user.email}
             const existingUser = await addUserCollection.findOne(query)
             if(existingUser){
@@ -96,8 +95,21 @@ app.use(
             res.send(result);
           })
 
+          app.get('/users/admin/:email',verifyToken, async(req, res)=>{
+            const email = req.params.email;
+            if(email !== req.decoded.email){
+              return res.status(403).send({message: 'forbidden access'})
+            }
+            const query = {email: email};
+            const user = await addUserCollection.findOne(query);
+            let admin = false;
+            if(user){
+              admin = user?.role === 'admin';
+            }
+            res.send({admin})
+          })
 
-        app.get('/users', async (req, res) => {
+        app.get('/users',verifyToken, verifyAdmin, async (req, res) => {
             try {
                 const query = addUserCollection.find()
               const result = await query.toArray();
@@ -109,7 +121,7 @@ app.use(
           });
 
 
-          app.patch('/users/admin/:id', async(req, res)=>{
+          app.patch('/users/admin/:id',verifyToken, verifyAdmin, async(req, res)=>{
             const id = req.params.id;
             const filter = {_id: new ObjectId(id)};
             const updatedDoc = {
@@ -121,15 +133,24 @@ app.use(
             res.send(result);
           })
       
-
-
-          app.delete('/users/:id', async(req, res)=>{
+          app.delete('/users/:id',verifyToken, verifyAdmin, async(req, res)=>{
             const id = req.params.id;
             const query = {_id : new ObjectId(id)}
             const result = await addUserCollection.deleteOne(query);
             res.send(result)
           })
+          // camp data
 
+          app.post('/camps', verifyToken, verifyAdmin, async (req, res)=>{
+            const item = req.body;
+            const result = await addCampCollection.insertOne(item);
+            res.send(result)
+          })
+
+          app.get('/camps', async(req, res)=>{
+            const result = await addCampCollection.find().toArray()
+            res.send(result);
+        })
 
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");

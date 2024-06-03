@@ -160,6 +160,13 @@ app.use(
           res.send(result)
         })
 
+        app.delete('/camps/:id', verifyToken, verifyAdmin, async(req, res)=>{
+          const id = req.params.id;
+          const query = {_id: new ObjectId(id)}
+          const result = await addCampCollection.deleteOne(query)
+          res.send(result);
+        })
+
         // particapant 
 
         app.post('/participant', verifyToken, async (req, res)=>{

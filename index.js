@@ -20,8 +20,10 @@ app.use(
   app.use(express.json());
 
   const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmgdsvn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+  // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmgdsvn.mongodb.net/?retryWrites=true&w=majority&appcampName=Cluster0`;
   
+  const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.rmgdsvn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
   // Create a MongoClient with a MongoClientOptions object to set the Stable API version
   const client = new MongoClient(uri, {
     serverApi: {
@@ -165,6 +167,22 @@ app.use(
           const query = {_id: new ObjectId(id)}
           const result = await addCampCollection.deleteOne(query)
           res.send(result);
+        })
+
+        app.patch('/camps/:id', async(req, res)=>{
+          const items = req.body;
+          const id = req.params.id;
+          const filter = {_id: new ObjectId(id)}
+          const updatedDoc={
+            $set:{
+              campName: items.campName,
+              location: items.location,
+              professionalName: items.professionalName,
+              price: items.price,
+            }
+          }
+          const result = await addCampCollection.updateOne(filter, updatedDoc)
+          res.send(result) 
         })
 
         // particapant 

@@ -142,6 +142,10 @@ app.use(
             const result = await addUserCollection.deleteOne(query);
             res.send(result)
           })
+
+
+
+
           // camp data
 
           app.post('/camps', verifyToken, verifyAdmin, async (req, res)=>{
@@ -185,6 +189,27 @@ app.use(
           res.send(result) 
         })
 
+         app.put('/camps/:id', async (req, res) => {
+        const campId = req.params.id;
+        const filter = { _id: new ObjectId(campId) };
+        const updateDoc = { $inc: { guests: 1 } };
+      
+        try {
+          // Update the camp document by incrementing the guests count
+          const result = await addCampCollection.updateOne(filter, updateDoc);
+      
+          if (result.modifiedCount === 0) {
+            return res.status(404).send('Camp not found');
+          }
+      
+          res.send({ message: 'Camp updated successfully' });
+        } catch (error) {
+          console.error('Error updating camp data:', error);
+          res.status(500).send('Error updating camp data');
+        }
+      });
+
+
         // particapant 
 
         app.post('/participant', verifyToken, async (req, res)=>{
@@ -198,6 +223,7 @@ app.use(
           res.send(result);
       })
 
+     
 
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");

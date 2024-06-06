@@ -161,12 +161,36 @@ app.use(
             res.send(result);
         })
 
-          app.get('/camps/:id', async(req, res)=>{
+        //   app.get('/camps/:id', async(req, res)=>{
+        //   const id = req.params.id;
+        //   const query= {_id : new ObjectId(id)}
+        //   const result = await addCampCollection.findOne(query)
+        //   res.send(result)
+        // })
+
+        app.get('/camps/:id', async (req, res) => {
           const id = req.params.id;
-          const query= {_id : new ObjectId(id)}
-          const result = await addCampCollection.findOne(query)
-          res.send(result)
-        })
+          console.log(`Received ID: ${id}`); // Log the received ID for debugging
+        
+          if (!ObjectId.isValid(id)) {
+            return res.status(400).send({ error: 'Invalid ID format' });
+          }
+        
+          const query = { _id: new ObjectId(id) };
+        console.log(query)
+          try {
+            const result = await addCampCollection.findOne(query);
+        
+            if (!result) {
+              return res.status(404).send({ error: 'Camp not found' });
+            }
+        
+            res.send(result);
+          } catch (err) {
+            console.error('Error fetching camp details:', err);
+            res.status(500).send({ error: 'Internal server error' });
+          }
+        });
 
         app.delete('/camps/:id', verifyToken, verifyAdmin, async(req, res)=>{
           const id = req.params.id;
@@ -224,6 +248,15 @@ app.use(
           const result = await addParticipantCollection.find().toArray()
           res.send(result);
       })
+
+          app.get('/participant/:id', async(req, res)=>{
+          const id = req.params.id;
+          const query= {_id : new ObjectId(id)}
+          const result = await addParticipantCollection.findOne(query)
+          res.send(result)
+        })
+
+
       // Get An User Data
       app.get("/participant/:email", async (req, res) => {
         const email = req.params.email;

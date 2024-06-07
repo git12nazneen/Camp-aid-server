@@ -43,6 +43,7 @@ app.use(
         const addUserCollection = client.db('campAid').collection('users')
         const addCampCollection = client.db('campAid').collection('camps')
         const addParticipantCollection = client.db('campAid').collection('participant')
+        const addPaymentCollection = client.db('campAid').collection('payments')
 
 
 
@@ -283,9 +284,14 @@ app.use(
 
     })
 
+    app.post('/payments', async(req, res)=>{
+      const payment = req.body;
+      const result = await addPaymentCollection.insertOne(payment)
 
-
-
+      console.log('payment info', payment)
+      res.send(result)
+    })
+  
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {

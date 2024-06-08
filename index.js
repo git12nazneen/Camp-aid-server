@@ -257,6 +257,7 @@ app.use(
           res.send(result)
         })
 
+    
 
       // Get An User Data
       app.get("/participant/:email", async (req, res) => {
@@ -306,6 +307,38 @@ app.use(
       res.send(result)
     })
 
+        // app.patch('/users/admin/:id',verifyToken, verifyAdmin, async(req, res)=>{
+        //   const id = req.params.id;
+        //   const filter = {_id: new ObjectId(id)};
+        //   const updatedDoc = {
+        //     $set:{
+        //       role:'admin'
+        //     }
+        //   }
+        //   const result = await addUserCollection.updateOne(filter, updatedDoc)
+        //   res.send(result);
+        // })
+
+
+        app.patch('/payments/:id/confirm', async (req, res) => {
+          try {
+            const participantId = req.params.id;
+            const result = await  db.collection('payments').findOneAndUpdate(
+              { _id: new ObjectId(participantId) },
+              { $set: { confirm: 'Confirmed' } },
+              { returnOriginal: false }
+            );
+        
+            if (!result.value) {
+              return res.status(404).send({ message: 'Participant not found' });
+            }
+        
+            res.send(result.value);
+          } catch (error) {
+            res.status(500).send({ message: 'Internal server error' });
+          }
+        });
+        
 
     //   await client.db("admin").command({ ping: 1 });
       console.log("Pinged your deployment. You successfully connected to MongoDB!");

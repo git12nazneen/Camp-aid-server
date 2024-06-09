@@ -37,7 +37,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
     const addUserCollection = client.db("campAid").collection("users");
     const addCampCollection = client.db("campAid").collection("camps");
@@ -381,6 +381,39 @@ app.delete("/participant/:id", async (req, res) => {
       const result = await addReviewCollection.insertOne(item);
       res.send(result);
     });
+
+    // app.post("/reviews", async (req, res) => {
+    //   const item = req.body;
+    //   const participant_id = item.participant_id; // Get participant_id from review data
+    
+    //   try {
+    //     const result = await addReviewCollection.insertOne(item);
+    
+    //     if (result.insertedId) {
+    //       // Update the participant's document to set feedback to true
+    //       const filter = { _id: new ObjectId(participant_id) };
+    //       const updateDoc = {
+    //         $set: {
+    //           feedback: true,
+    //         },
+    //       };
+    //       const updateResult = await addParticipantCollection.updateOne(filter, updateDoc);
+    
+    //       if (updateResult.modifiedCount > 0) {
+    //         res.send(result);
+    //       } else {
+    //         res.status(500).send({ message: "Failed to update participant feedback" });
+    //       }
+    //     } else {
+    //       res.status(500).send({ message: "Failed to insert review" });
+    //     }
+    //   } catch (err) {
+    //     console.error("Error inserting review or updating participant feedback:", err);
+    //     res.status(500).send({ message: "Internal server error" });
+    //   }
+    // });
+
+
 
     app.get("/reviews", async (req, res) => {
       const result = await addReviewCollection.find().toArray();

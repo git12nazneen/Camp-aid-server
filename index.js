@@ -4,15 +4,16 @@ require("dotenv").config();
 const app = express();
 const jwt = require("jsonwebtoken");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8000;
 
 app.use(
   cors({
     origin: [
       "http://localhost:5173",
       "http://localhost:5174",
-      // "https://nourish-hub-efad9.web.app",
-      // "https://nourish-hub-efad9.firebaseapp.com",
+      "https://camp-aid.web.app",
+      "https://camp-aid.firebaseapp.com",
+     
     ],
     credentials: true,
   })
@@ -297,32 +298,63 @@ app.delete("/participant/:id", async (req, res) => {
     //   res.send(result)
     // })
 
+    // app.post("/payments", async (req, res) => {
+    //   const payment = req.body;
+    //   const result = await addPaymentCollection.insertOne(payment);
+
+    //   // console.log("Payment info", payment);
+    //   const participantFilter = { camp_id: payment.itemIds };
+    //   console.log('filter', participantFilter)
+    //   const participantUpdate = {
+    //     $set: {
+    //       status: "Paid",
+    //     },
+    //   };
+
+    //   try {
+    //     const participantResult = await addParticipantCollection.updateOne(
+    //       participantFilter,
+    //       participantUpdate
+    //     );
+    //     // console.log("Participant updated:", participantResult);
+    //     res.send(participantResult)
+    //   } catch (err) {
+    //     console.error("Error updating participant data:", err);
+    //   }
+
+    //   // res.send(result);
+    // });
+
     app.post("/payments", async (req, res) => {
       const payment = req.body;
-      const result = await addPaymentCollection.insertOne(payment);
-
-      console.log("Payment info", payment);
-
-      // Update the corresponding participant document with the payment status
-      const participantFilter = { camp_id: payment.itemIds };
-      const participantUpdate = {
-        $set: {
-          status: "Paid",
-        },
-      };
-
+    console.log('paymnet', payment)
       try {
-        const participantResult = await addParticipantCollection.updateOne(
-          participantFilter,
-          participantUpdate
-        );
+        // Insert payment into the addPaymentCollection
+        const result = await addPaymentCollection.insertOne(payment);
+     console.log(result)
+        // Prepare the filter for the participant update
+        const participantFilter = { camp_id: payment.itemIds };
+        console.log('filter', participantFilter);
+    
+        const participantUpdate = {
+          $set: {
+            status: "Paid",
+          },
+        };
+    
+        // Update participant data in the addParticipantCollection
+        const participantResult = await addParticipantCollection.updateOne(participantFilter, participantUpdate);
+    
         console.log("Participant updated:", participantResult);
+    
+        res.send(participantResult);
       } catch (err) {
-        console.error("Error updating participant data:", err);
+        console.error("Error processing payment or updating participant data:", err);
+        res.status(500).send({ error: "Internal Server Error" });
       }
-
-      res.send(result);
     });
+    
+  
 
     app.get("/payments", async (req, res) => {
       const result = await addPaymentCollection.find().toArray();
@@ -381,38 +413,6 @@ app.delete("/participant/:id", async (req, res) => {
       const result = await addReviewCollection.insertOne(item);
       res.send(result);
     });
-
-    // app.post("/reviews", async (req, res) => {
-    //   const item = req.body;
-    //   const participant_id = item.participant_id; // Get participant_id from review data
-    
-    //   try {
-    //     const result = await addReviewCollection.insertOne(item);
-    
-    //     if (result.insertedId) {
-    //       // Update the participant's document to set feedback to true
-    //       const filter = { _id: new ObjectId(participant_id) };
-    //       const updateDoc = {
-    //         $set: {
-    //           feedback: true,
-    //         },
-    //       };
-    //       const updateResult = await addParticipantCollection.updateOne(filter, updateDoc);
-    
-    //       if (updateResult.modifiedCount > 0) {
-    //         res.send(result);
-    //       } else {
-    //         res.status(500).send({ message: "Failed to update participant feedback" });
-    //       }
-    //     } else {
-    //       res.status(500).send({ message: "Failed to insert review" });
-    //     }
-    //   } catch (err) {
-    //     console.error("Error inserting review or updating participant feedback:", err);
-    //     res.status(500).send({ message: "Internal server error" });
-    //   }
-    // });
-
 
 
     app.get("/reviews", async (req, res) => {
